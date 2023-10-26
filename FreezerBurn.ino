@@ -17,13 +17,12 @@ void secondsInc()
 {
   seconds ++;
   Serial.println(seconds);
-  delay(1000);
 }
 
 void setup()
 {
   Serial.begin(9600);
-  pinMode(magnetPin, INPUT);
+  pinMode(magnetPin, INPUT_PULLUP);
   pinMode(ledPin, OUTPUT);
 }
 
@@ -34,8 +33,9 @@ void loop()
   //And now my stuff
   magnetConnected = digitalRead(magnetPin);
 
-  if (magnetConnected == HIGH)
+  if (magnetConnected == LOW)
   {
+    Serial.println("Magnets not connected");
     if (seconds < maxSeconds)
     {
       secondsInc();
@@ -51,4 +51,5 @@ void loop()
     seconds = 0;
     digitalWrite(ledPin, LOW);
   }
+  delay(1000);
 }
