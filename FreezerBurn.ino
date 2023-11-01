@@ -2,7 +2,6 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include "ESPAsyncWebServer.h"
-#include <stdio.h> //We're taking a wild shot in the dark here but we'll see if this works
 
 #define magnetPin 21
 #define ledPin 2
