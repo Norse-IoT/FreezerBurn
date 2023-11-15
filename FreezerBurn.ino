@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include "ESPAsyncWebServer.h"
+#include "page.h" //Webpage for the captive portal
 
 #define magnetPin 21
 #define ledPin 2
@@ -18,21 +19,6 @@ bool timeRecieved = false;
 int userMinutes = 0;
 String minutesInput;
 
-//There needs to be a more flexible, portable way to do this
-const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html><head>
-  <title>Captive Portal Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head><body>
-  <h3>Captive Portal Demo</h3>
-  <br><br>
-  <form action="/get">
-    <br>
-    Max amount of minutes: <input type="text" name="seconds">
-    <br>
-    <input type="submit" value="Submit">
-  </form>
-</body></html>)rawliteral";
 
 //Code that I didn't copy paste
 class CaptiveRequestHandler : public AsyncWebHandler
@@ -82,14 +68,15 @@ void secondsInc()
 void setup()
 {
   Serial.begin(9600);
+  //Non-web stuff
+  pinMode(magnetPin, INPUT_PULLUP);
+  pinMode(ledPin, OUTPUT);
   WiFi.mode(WIFI_AP);
   WiFi.softAP("Freezer Burn");
   setupServer();
   dnsServer.start(53, "*", WiFi.softAPIP());
   server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
   server.begin();
-  pinMode(magnetPin, INPUT_PULLUP);
-  pinMode(ledPin, OUTPUT);
 }
 
 void loop()
