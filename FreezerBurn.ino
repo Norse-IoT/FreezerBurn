@@ -3,6 +3,11 @@
 #include <AsyncTCP.h>
 #include "ESPAsyncWebServer.h"
 #include "page.h" //Webpage for the captive portal
+/*
+TODO
+-Include twilio library
+-Get webpage to where it can detect the current preferred WiFi network
+*/
 
 #define magnetPin 21
 #define ledPin 2
@@ -16,9 +21,12 @@ int maxSeconds = 10;
 
 //Setup stuff here
 bool timeRecieved = false;
+bool wifirecieved = false; //Has the esp gotten the information needed to connect to wifi? 
 int userMinutes = 0;
 String minutesInput;
-
+String userName;
+String currentNetwork;
+String wifiPass;
 
 //Code that I didn't copy paste
 class CaptiveRequestHandler : public AsyncWebHandler
@@ -54,6 +62,35 @@ void setupServer(){
         Serial.println(inputMessage);
         timeRecieved = true;
       }
+      
+      if (request->hasParam("name"))
+      {
+        inputMessage = request->getParam("name")->value();
+        inputParam = "name";
+        userName = inputMessage;
+        Serial.print("Hello, ");
+        Serial.println(inputMessage);
+      }
+
+      if (request->hasParam("network"))
+      {
+        inputMessage = request->getParam("network")->value();
+        inputParam = "network";
+        currentNetwork = inputMessage;
+        Serial.print("The current preferred network is ");
+        Serial.println(currentNetwork);
+        if (wifiPass != "") wifirecieved = true;
+      }
+
+      if (request->hasParam("netpass"))
+      {
+        inputMessage = request->getParam("netpass")->value();
+        inputParam = "netpass";
+        wifiPass = inputMessage;
+        Serial.println(wifiPass);
+        if (currentNetwork != "") wifirecieved = true;
+      }
+      //This goes at the end of the entire sequence
       request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
   });
 }
@@ -77,6 +114,20 @@ void setup()
   dnsServer.start(53, "*", WiFi.softAPIP());
   server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
   server.begin();
+
+    //Anything to do with wifi needs to be debugged further but it's here as a start
+  if (wifirecieved == true)
+  {
+    WiFi.begin(currentNetwork, wifiPass);
+    Serial.println("Connecting");
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      Serial.print('.');
+      delay(500); 
+    }
+
+    Serial.println("Successful connection");
+  }
 }
 
 void loop()
@@ -100,6 +151,8 @@ void loop()
       if (seconds == maxSeconds)
       {
         digitalWrite(ledPin, HIGH);
+        Serial.print(userName);
+        Serial.println(", your freezer or fridge is open. Please close it immediately.");
         //And then this is where other stuff would happen
       }
     }
