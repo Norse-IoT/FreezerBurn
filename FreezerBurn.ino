@@ -6,7 +6,7 @@
 /*
 TODO
 -Include twilio library
--Get webpage to where it can detect the current preferred WiFi network
+-Set up messaging
 */
 
 #define magnetPin 21
@@ -22,6 +22,7 @@ int maxSeconds = 10;
 //Setup stuff here
 bool timeRecieved = false;
 bool wifirecieved = false; //Has the esp gotten the information needed to connect to wifi? 
+bool wifiConnecting = false; //Even more so, is the Wifi being connected/has connected?
 int userMinutes = 0;
 String minutesInput;
 String userName;
@@ -55,7 +56,7 @@ void setupServer(){
       String inputMessage;
       String inputParam;
   
-      if (request->hasParam("seconds")) {
+      if (request->hasParam("seconds")) { //It's actually minutes; this naming mishap is because of the way I originally wrote the webpage
         inputMessage = request->getParam("seconds")->value();
         inputParam = "seconds";
         minutesInput = inputMessage;
@@ -79,7 +80,6 @@ void setupServer(){
         currentNetwork = inputMessage;
         Serial.print("The current preferred network is ");
         Serial.println(currentNetwork);
-        if (wifiPass != "") wifirecieved = true;
       }
 
       if (request->hasParam("netpass"))
@@ -87,9 +87,9 @@ void setupServer(){
         inputMessage = request->getParam("netpass")->value();
         inputParam = "netpass";
         wifiPass = inputMessage;
-        Serial.println(wifiPass);
-        if (currentNetwork != "") wifirecieved = true;
       }
+
+      if (wifiPass > "" && currentNetwork > " ") wifirecieved = true;
       //This goes at the end of the entire sequence
       request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
   });
@@ -108,16 +108,20 @@ void setup()
   //Non-web stuff
   pinMode(magnetPin, INPUT_PULLUP);
   pinMode(ledPin, OUTPUT);
+  //Back to web stuff
   WiFi.mode(WIFI_AP);
   WiFi.softAP("Freezer Burn");
   setupServer();
   dnsServer.start(53, "*", WiFi.softAPIP());
   server.addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER);
   server.begin();
+}
 
-    //Anything to do with wifi needs to be debugged further but it's here as a start
-  if (wifirecieved == true)
+void wifiConnect()
+{
+  if (wifirecieved == true && wifiConnecting == false)
   {
+    wifiConnecting = true;
     WiFi.begin(currentNetwork, wifiPass);
     Serial.println("Connecting");
     while (WiFi.status() != WL_CONNECTED)
@@ -134,6 +138,7 @@ void loop()
 {
   //DNS stuff
   dnsServer.processNextRequest();
+  wifiConnect(); //It's probably better to try it through setup but it's not an option here because the wifi nextworks are not defined at first
   if (timeRecieved == true)
   {
     userMinutes = minutesInput.toInt(); //String to number conversion
