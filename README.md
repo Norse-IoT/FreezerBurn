@@ -9,5 +9,5 @@ Feel free to discuss this project [on Discord](https://discord.com/channels/1027
 ----
 
 Todo:
-Include Twilio libraries and the respective functions
-Update webpage to include Wifi network login info
+- Include Twilio libraries and the respective functions
+- Update webpage to include Wifi network login info
