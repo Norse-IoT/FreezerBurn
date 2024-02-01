@@ -29,7 +29,7 @@ This is the general workflow to make a contribution to this repository:
 
 ### Example CLI usage
 
-If you're looking to contribute via the git CLI, I've translated the above steps into commands. You can also use a git GUI if that's easier for you.
+If you're looking to contribute via the git CLI, I've translated the above steps into commands. You can also use a [git GUI](https://desktop.github.com) if that's easier for you.
 
 1. `git clone https://github.com/Norse-IoT/FreezerBurn.git` (or `gh repo clone Norse-IoT/FreezerBurn` if you have the GitHub CLI installed)
 2. ```bash
