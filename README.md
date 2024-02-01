@@ -37,9 +37,13 @@ If you're looking to contribute via the git CLI, I've translated the above steps
     git pull # start feature branches with the most recent updates
     git checkout -b 'feature/your-feature-name' # create a feature branch
     ```
-3. ... make cool things ...
+3. ```bash
+   # do this as many times as you need:
+   git add -A # add all changes
+   git commit -m "changed XYZ" # write a good git message
+   ```
 4. ```bash
-   git push
+   git push --set-upstream origin 'feature/your-feature-name'
    ```
 5. (done from github)
 6. (done from github)
