@@ -47,6 +47,7 @@ If you're looking to contribute via the git CLI, I've translated the above steps
    ```
 5. (done from github)
 6. (done from github)
+7. (done from github)
 
 Thanks! Feel free to reach out if you have any questions.
 
