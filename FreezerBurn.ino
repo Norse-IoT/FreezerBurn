@@ -3,11 +3,6 @@
 #include <AsyncTCP.h>
 #include "ESPAsyncWebServer.h"
 #include "page.h" //Webpage for the captive portal
-/*
-TODO
--Include twilio library
--Set up messaging
-*/
 
 #define magnetPin 21
 #define ledPin 2
