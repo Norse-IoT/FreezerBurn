@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include "ESPAsyncWebServer.h"
-#include "page.h" //Webpage for the captive portal
+#include "./page/page.h" //Webpage for the captive portal
 
 #define magnetPin 21
 #define ledPin 2
