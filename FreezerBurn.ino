@@ -50,6 +50,7 @@ void setupServer(){
   server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
       String inputMessage;
       String inputParam;
+      wifiConnecting = false;
   
       if (request->hasParam("seconds")) { //It's actually minutes; this naming mishap is because of the way I originally wrote the webpage
         inputMessage = request->getParam("seconds")->value();
