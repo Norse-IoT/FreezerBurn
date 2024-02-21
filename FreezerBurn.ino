@@ -1,7 +1,6 @@
 #include <DNSServer.h>
 #include <WiFi.h>
-#include <AsyncTCP.h>
-#include "ESPAsyncWebServer.h"
+#include "ESPAsyncWebServer.h" //Library that allows the captive portal to function, version 2.4.3 by Me-No-Dev
 #include "./page/page.h" //Webpage for the captive portal
 
 #define magnetPin 21
@@ -73,6 +72,10 @@ void setupServer(){
       {
         inputMessage = request->getParam("network")->value();
         inputParam = "network";
+        if (wifiConnecting == true && currentNetwork != inputMessage) //Let wifi be reconnected if this value differs from what's already stored
+        {
+          wifiConnecting == false;
+        }
         currentNetwork = inputMessage;
         Serial.print("The current preferred network is ");
         Serial.println(currentNetwork);
@@ -117,7 +120,7 @@ void wifiConnect()
 {
   if (wifirecieved == true && wifiConnecting == false)
   {
-    wifiConnecting = true;
+    wifiConnecting = true; //Perhaps find a way to where if the captive portal results differ from the inputted value, set this to false again and reconnect?
     WiFi.begin(currentNetwork, wifiPass);
     Serial.println("Connecting");
     while (WiFi.status() != WL_CONNECTED)
