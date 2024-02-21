@@ -1,9 +1,6 @@
-#include <DNSServer.h>
-#include <WiFi.h>
-#include <AsyncTCP.h>
-#include "ESPAsyncWebServer.h"
-#include "./page/page.h" //Webpage for the captive portal
-
+// ESP Async WebServer by Me-No-Dev v2.4.3
+// ArduinoJson by Benoit Blanchon v7.0.3
+#include "FreezerConfig.h"
 #define magnetPin 21
 #define ledPin 2
 
@@ -20,9 +17,9 @@ bool wifirecieved = false; //Has the esp gotten the information needed to connec
 bool wifiConnecting = false; //Even more so, is the Wifi being connected/has connected?
 int userMinutes = 0;
 String minutesInput;
-String userName;
-String currentNetwork;
 String wifiPass;
+
+FreezerConfig config;
 
 //Code that I didn't copy paste
 class CaptiveRequestHandler : public AsyncWebHandler
@@ -41,15 +38,16 @@ public:
     }
 };
 
-void setupServer(){
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+void setupServer() {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send_P(200, "text/html", index_html); 
       Serial.println("Client Connected");
   });
     
-  server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
+  server.on("/config", HTTP_POST, [] (AsyncWebServerRequest *request) {
       String inputMessage;
       String inputParam;
+      config.fromRequest(request);
   
       if (request->hasParam("seconds")) { //It's actually minutes; this naming mishap is because of the way I originally wrote the webpage
         inputMessage = request->getParam("seconds")->value();
@@ -112,28 +110,13 @@ void setup()
   server.begin();
 }
 
-void wifiConnect()
-{
-  if (wifirecieved == true && wifiConnecting == false)
-  {
-    wifiConnecting = true;
-    WiFi.begin(currentNetwork, wifiPass);
-    Serial.println("Connecting");
-    while (WiFi.status() != WL_CONNECTED)
-    {
-      Serial.print('.');
-      delay(500); 
-    }
 
-    Serial.println("Successful connection");
-  }
-}
 
 void loop()
 {
   //DNS stuff
   dnsServer.processNextRequest();
-  wifiConnect(); //It's probably better to try it through setup but it's not an option here because the wifi nextworks are not defined at first
+  config.wifiConnect(); //It's probably better to try it through setup but it's not an option here because the wifi nextworks are not defined at first
   if (timeRecieved == true)
   {
     userMinutes = minutesInput.toInt(); //String to number conversion
