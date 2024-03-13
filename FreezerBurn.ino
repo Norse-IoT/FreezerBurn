@@ -1,6 +1,12 @@
 #include <DNSServer.h>
 #include <WiFi.h>
 #include "ESPAsyncWebServer.h" //Library that allows the captive portal to function, version 2.4.3 by Me-No-Dev
+/*
+  ONE FINAL NOTE ABOUT ESP ASYNC WEBSERVER
+
+  This library has dependencies that come from AsyncTCP and will not compile if AsyncTCP is not installed, even though
+  AsyncTCP is not actually called in this program. Version used is "AsyncTCP" by dvarrel, version 1.1.4
+*/
 #include "./page/page.h" //Webpage for the captive portal
 
 #define magnetPin 21
