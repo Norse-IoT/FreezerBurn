@@ -1,4 +1,3 @@
-// ESP Async WebServer by Me-No-Dev v2.4.3
 
 #include "FreezerConfig.h"
 
@@ -22,25 +21,10 @@
   the platformio.ini file will automatically create the required dependencies for the project if configured correctly
 */
 
-#define magnetPin 21
-#define ledPin 2
+bool wifiConnected = false;
 
 DNSServer dnsServer;
 AsyncWebServer server(80);
-
-byte magnetConnected;
-int seconds = 0;
-int maxSeconds = 10; 
-
-//Setup stuff here
-bool timeRecieved = false;
-bool wifiConnected = false;
-int userMinutes = 0;
-String minutesInput;
-String userName;
-String currentNetwork;
-String wifiPass;
-
 
 // create the config object
 FreezerConfig config = FreezerConfig();
@@ -72,10 +56,11 @@ void setupServer(){
   server.on("/configure", HTTP_POST, [] (AsyncWebServerRequest *request) {
     if (config.fromRequest(request)) {
       Serial.println("Config Updated Successfully");
+      request->send(200, "text/html", "The values were updated successfully<br><a href=\"/\">Return to Home Page</a>");
     } else {
       Serial.println("Config not updated successfully, something went wrong.");
+      request->send(400, "text/html", "The values were not updated successfully <br><a href=\"/\">Return to Home Page</a>");
     }
-    request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
   });
 }
 
@@ -114,11 +99,14 @@ void loop()
         Serial.print(config.getUsername());
         Serial.println(", your freezer or fridge is open. Please close it immediately.");
       }
-    } else {
+    } else { // it is open but the timer has not started yet
+            // will set config.opened after starting the timer
       config.startTimer();
     }
   } else {
-    
+    if(config.getOpened()) { // if it was open before it is closed now
+      config.stopTimer(); // so stop the timer 
+    }
     digitalWrite(ledPin, LOW);
   }
 

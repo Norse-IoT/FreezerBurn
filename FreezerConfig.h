@@ -7,6 +7,8 @@
 
 #include "./page/page.h" //Webpage for the captive portal
 
+#define magnetPin 21
+#define ledPin 2
 
 
 // FreezerConfig.h

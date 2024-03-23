@@ -56,7 +56,7 @@ void FreezerConfig::stopTimer() {
 bool FreezerConfig::timeLimitReached() const {
   std::chrono::system_clock::time_point cur_time = std::chrono::system_clock::now();
   std::chrono::system_clock::duration elapsed = (cur_time - openedTime);
-  if (elapsed > std::chrono::seconds(timeLimit)) {
+  if (elapsed > std::chrono::milliseconds(timeLimit)) {
     return true;
   } else return false;
 }
@@ -117,4 +117,3 @@ void FreezerConfig::setTimeLimit(long num) {
 void FreezerConfig::setUsername(String name) {
   eapUsername = name;
 }
-
