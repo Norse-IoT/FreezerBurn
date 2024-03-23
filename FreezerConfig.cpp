@@ -1,47 +1,89 @@
 #include "FreezerConfig.h"
 // FreezerConfig.cpp
+// this is the config logic for a single freezer
+
 
 // default constructor
 FreezerConfig::FreezerConfig() 
-  : eapId(""),
+  : isInitialized(false), 
+    eapId(""),
     eapUsername(""),
     eapPassword(""),
     phoneNumber(0),
     timeLimit(10000),
-    freezerName(""),
-    isInitalized(false) {}
+    freezerName(""), 
+    server(80),
+    openedTime(), 
+    opened(false) {}
 
 
-void FreezerConfig::fromRequest(AsyncWebServerRequest *request) {
-  // process request one parameter at a time. lots of `if (request->hasParameter("field-name"))`...
-  
+
+// main logic
+bool FreezerConfig::fromRequest(AsyncWebServerRequest *request) {
+  // process a POST request for data update
+  if (request->hasParam("eap-id")) {
+    eapId = request->getParam("eap-id")->value();
+  } else return false;
+  if (request->hasParam("eap-username")) {
+    eapUsername = request->getParam("eap-username")->value();
+  } else return false;
+  if (request->hasParam("eap-password")) {
+    eapPassword = request->getParam("eap-password")->value();
+  } else return false;
+  if (request->hasParam("time-limit")) {
+    timeLimit = request->getParam("time-limit")->value().toInt();
+  } else return false;
+  if (request->hasParam("eap-id")) {
+    eapId = request->getParam("eap-id")->value();
+  } else return false;
+  if (request->hasParam("eap-id")) {
+    eapId = request->getParam("eap-id")->value();
+  } else return false;
+
+  return true;
 }
+
+
+void FreezerConfig::startTimer() {
+  openedTime = std::chrono::system_clock::now();
+  opened = true;
+}
+
+void FreezerConfig::stopTimer() {
+  opened = false;
+}
+
+bool FreezerConfig::timeLimitReached() const {
+  std::chrono::system_clock::time_point cur_time = std::chrono::system_clock::now();
+  std::chrono::system_clock::duration elapsed = (cur_time - openedTime);
+  if (elapsed > std::chrono::seconds(timeLimit)) {
+    return true;
+  } else return false;
+}
+
 
 void FreezerConfig::wifiConnect()
 {
-  if (wifirecieved == true && wifiConnecting == false)
+  WiFi.begin(eapUsername, eapPassword);
+  Serial.print("Connecting");
+  // will wait for initial user connection for setup
+  while (WiFi.status() != WL_CONNECTED)
   {
-    wifiConnecting = true;
-    WiFi.begin(eapUsername, eapPassword);
-    Serial.println("Connecting");
-    while (WiFi.status() != WL_CONNECTED)
-    {
-      Serial.print('.');
-      delay(500); 
-    }
-    
-    Serial.println("Successful connection");
-  }
-}
-// define your getters and setters
-// e.g.
-
-
-
-bool FreezerConfig::isInitalized() const {
-  return isInitalized;
+    Serial.print('.');
+    delay(500); 
+  } 
+  Serial.println();
+  Serial.println("Successful connection");
 }
 
+
+// getters
+bool FreezerConfig::getInitialized() const {
+  return isInitialized;
+}
+bool FreezerConfig::getOpened() const {
+  return opened;
+}
 String FreezerConfig::getId() const {
   return eapId;
 }
@@ -57,6 +99,9 @@ int FreezerConfig::getPhoneNumber() const {
 long FreezerConfig::getTimeLimit() const {
   return timeLimit;
 }
+
+
+// setters
 void FreezerConfig::setId(String id) {
   eapId = id;
 }
@@ -68,5 +113,8 @@ void FreezerConfig::setPhoneNumber(int num) {
 }
 void FreezerConfig::setTimeLimit(long num) {
   timeLimit = num;
+}
+void FreezerConfig::setUsername(String name) {
+  eapUsername = name;
 }
 

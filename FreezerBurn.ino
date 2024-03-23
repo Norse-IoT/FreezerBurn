@@ -1,6 +1,27 @@
 // ESP Async WebServer by Me-No-Dev v2.4.3
-// ArduinoJson by Benoit Blanchon v7.0.3
+
 #include "FreezerConfig.h"
+
+/*
+  Required Libraries:
+    AsyncTCP by dvarrell 
+      LINK https://github.com/dvarrel/AsyncTCP
+
+    ESP_Async_WebServer by me_no_dev 
+      LINK https://github.com/mathieucarbou/ESPAsyncWebServer
+
+
+
+  I work on the project in a PlatformIO project in VSCode. 
+  Source directory of the project is wrapped by another directory. 
+  In outer dir, there is src (the project) and lib (with 2 more named dirs for libraries mentioned)
+  and a platformio.ini file.
+
+  with the PlatformIO extension installed, it is relatively easy to repeat these project settings for development.
+
+  the platformio.ini file will automatically create the required dependencies for the project if configured correctly
+*/
+
 #define magnetPin 21
 #define ledPin 2
 
@@ -13,13 +34,16 @@ int maxSeconds = 10;
 
 //Setup stuff here
 bool timeRecieved = false;
-bool wifirecieved = false; //Has the esp gotten the information needed to connect to wifi? 
-bool wifiConnecting = false; //Even more so, is the Wifi being connected/has connected?
+bool wifiConnected = false;
 int userMinutes = 0;
 String minutesInput;
+String userName;
+String currentNetwork;
 String wifiPass;
 
-FreezerConfig config;
+
+// create the config object
+FreezerConfig config = FreezerConfig();
 
 //Code that I didn't copy paste
 class CaptiveRequestHandler : public AsyncWebHandler
@@ -38,62 +62,24 @@ public:
     }
 };
 
-void setupServer() {
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+void setupServer(){
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
       request->send_P(200, "text/html", index_html); 
       Serial.println("Client Connected");
   });
     
-  server.on("/config", HTTP_POST, [] (AsyncWebServerRequest *request) {
-      String inputMessage;
-      String inputParam;
-      config.fromRequest(request);
-  
-      if (request->hasParam("seconds")) { //It's actually minutes; this naming mishap is because of the way I originally wrote the webpage
-        inputMessage = request->getParam("seconds")->value();
-        inputParam = "seconds";
-        minutesInput = inputMessage;
-        Serial.println(inputMessage);
-        timeRecieved = true;
-      }
-      
-      if (request->hasParam("name"))
-      {
-        inputMessage = request->getParam("name")->value();
-        inputParam = "name";
-        userName = inputMessage;
-        Serial.print("Hello, ");
-        Serial.println(inputMessage);
-      }
-
-      if (request->hasParam("network"))
-      {
-        inputMessage = request->getParam("network")->value();
-        inputParam = "network";
-        currentNetwork = inputMessage;
-        Serial.print("The current preferred network is ");
-        Serial.println(currentNetwork);
-      }
-
-      if (request->hasParam("netpass"))
-      {
-        inputMessage = request->getParam("netpass")->value();
-        inputParam = "netpass";
-        wifiPass = inputMessage;
-      }
-
-      if (wifiPass > "" && currentNetwork > " ") wifirecieved = true;
-      //This goes at the end of the entire sequence
-      request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
+  server.on("/configure", HTTP_POST, [] (AsyncWebServerRequest *request) {
+    if (config.fromRequest(request)) {
+      Serial.println("Config Updated Successfully");
+    } else {
+      Serial.println("Config not updated successfully, something went wrong.");
+    }
+    request->send(200, "text/html", "The values entered by you have been successfully sent to the device <br><a href=\"/\">Return to Home Page</a>");
   });
 }
 
-//And now it's honesty hour again
-void secondsInc()
-{
-  seconds ++;
-  Serial.println(seconds);
-}
+
 
 void setup()
 {
@@ -101,7 +87,9 @@ void setup()
   //Non-web stuff
   pinMode(magnetPin, INPUT_PULLUP);
   pinMode(ledPin, OUTPUT);
+  
   //Back to web stuff
+  // Create captive web portal for initial connection
   WiFi.mode(WIFI_AP);
   WiFi.softAP("Freezer Burn");
   setupServer();
@@ -111,39 +99,30 @@ void setup()
 }
 
 
-
 void loop()
 {
-  //DNS stuff
-  dnsServer.processNextRequest();
-  config.wifiConnect(); //It's probably better to try it through setup but it's not an option here because the wifi nextworks are not defined at first
-  if (timeRecieved == true)
-  {
-    userMinutes = minutesInput.toInt(); //String to number conversion
-    maxSeconds = (userMinutes * 60);
+  if (wifiConnected) {
+    config.wifiConnect();
+    wifiConnected = true;
   }
-  //And now my stuff
-  magnetConnected = digitalRead(magnetPin);
 
-  if (magnetConnected == LOW)
+  if (digitalRead(magnetPin) == LOW) // then the door is open
   {
-    if (seconds < maxSeconds)
-    {
-      secondsInc();
-
-      if (seconds == maxSeconds)
-      {
-        digitalWrite(ledPin, HIGH);
-        Serial.print(userName);
+    digitalWrite(ledPin, HIGH);
+    if(config.getOpened()) {
+      if(config.timeLimitReached()) {
+        Serial.print(config.getUsername());
         Serial.println(", your freezer or fridge is open. Please close it immediately.");
-        //And then this is where other stuff would happen
       }
+    } else {
+      config.startTimer();
     }
-  }
-  else
-  {
-    seconds = 0;
+  } else {
+    
     digitalWrite(ledPin, LOW);
   }
+
+
+  dnsServer.processNextRequest();
   delay(1000);
 }
